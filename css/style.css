@@ -1,0 +1,19 @@
+body {
+  font-family: 'Ancizar Sans', sans-serif;
+}
+
+.class-list-item {
+  cursor: pointer;
+}
+
+.class-list-item .student-count {
+  font-size: 0.875rem;
+}
+
+#studentList {
+  transition: opacity 150ms ease;
+}
+
+#studentList.fading {
+  opacity: 0;
+}
