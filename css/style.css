@@ -105,3 +105,50 @@ body {
 .calendar-date-cell.selected .attendance-badge {
   color: white;
 }
+
+/* Period Details Animation */
+#periodDetailsSection {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease;
+}
+
+#periodDetailsSection.period-details-enter {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.period-detail-badge {
+  /* padding: 0.5rem 0; */
+  /* border-bottom: 1px solid #e9ecef; */
+}
+
+.period-detail-badge:last-child {
+  border-bottom: none;
+}
+
+/* Existing Records Styling */
+.existing-record-badge {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.2s ease;
+}
+
+.existing-record-badge:last-child {
+  border-bottom: none;
+}
+
+.existing-record-badge.highlighted {
+  background-color: #d1e7dd;
+  border-radius: 0.25rem;
+}

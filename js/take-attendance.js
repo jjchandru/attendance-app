@@ -59,7 +59,61 @@ function handlePeriodClick(event) {
   }
 
   renderPeriodButtons();
+  highlightMatchingRecord();
   renderStudentList(currentClass);
+}
+
+function renderExistingRecords() {
+  const records = loadAttendance();
+  const dateRecords = [];
+  
+  for (const key in records) {
+    const record = records[key];
+    if (record.classId === currentClassId && record.date === currentDate) {
+      dateRecords.push(record);
+    }
+  }
+  
+  const section = document.getElementById('existingRecordsSection');
+  const listEl = document.getElementById('existingRecordsList');
+  
+  if (dateRecords.length === 0) {
+    section.classList.add('d-none');
+    return;
+  }
+  
+  section.classList.remove('d-none');
+  listEl.innerHTML = '';
+  
+  // Sort by period label
+  dateRecords.sort((a, b) => {
+    const aFirst = parseInt(a.period.split(',')[0]);
+    const bFirst = parseInt(b.period.split(',')[0]);
+    return aFirst - bFirst;
+  });
+  
+  dateRecords.forEach(record => {
+    const badge = document.createElement('div');
+    badge.className = 'existing-record-badge';
+    badge.dataset.period = record.period;
+    badge.innerHTML = `
+      <span class="badge bg-success me-2">✓ Period ${record.period}</span>
+      <span class="text-muted">${record.absentNumbers.length} absent</span>
+    `;
+    listEl.appendChild(badge);
+  });
+}
+
+function highlightMatchingRecord() {
+  const label = currentLabel();
+  
+  document.querySelectorAll('.existing-record-badge').forEach(badge => {
+    if (badge.dataset.period === label) {
+      badge.classList.add('highlighted');
+    } else {
+      badge.classList.remove('highlighted');
+    }
+  });
 }
 
 function renderStudentList(cls) {
@@ -129,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('takeAttendanceContent').classList.remove('d-none');
 
   renderPeriodButtons();
+  renderExistingRecords();
   renderStudentList(currentClass);
 
   document.getElementById('periodButtons').addEventListener('click', handlePeriodClick);

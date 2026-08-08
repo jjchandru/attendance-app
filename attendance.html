@@ -19,24 +19,65 @@
     </div>
   </nav>
 
-  <main class="container pb-5">
-    <a href="index.html" class="d-inline-block mb-3">&larr; Back to Classes</a>
+  <main class="container pb-3">
+    <a href="index.html" class="d-inline-block mb-2">&larr; Back to Classes</a>
 
     <div id="notFound" class="alert alert-danger d-none" role="alert">
       Class not found. It may have been removed.
     </div>
 
     <div id="attendanceContent" class="d-none">
-      <h2 id="classTitle" class="mb-3"></h2>
+      <h2 id="classTitle" class="mb-2"></h2>
 
-      <div class="mb-4">
-        <a href="#" id="selectDateLink" class="btn btn-outline-primary">
-          Specific Date Attendance
-        </a>
+      <!-- Year Selection -->
+      <div class="mb-2 mt-2">
+        <h6 class="mb-2">Year</h6>
+        <div id="yearButtons" class="d-flex gap-2 flex-wrap"></div>
       </div>
 
-      <h5 class="mb-3">Attendance Records</h5>
-      <div class="row row-cols-2 g-3" id="dateList"></div>
+      <!-- Month Selection -->
+      <div class="mb-2">
+        <h6 class="mb-2">Month</h6>
+        <div id="monthButtons" class="d-flex gap-2 flex-wrap"></div>
+      </div>
+
+      <!-- Calendar -->
+      <div id="calendarSection" class="d-none">
+        <h6 class="mb-2">Day</h6>
+        
+        <div class="calendar-grid mb-2">
+          <!-- Day headers -->
+          <div class="calendar-header">
+            <div class="calendar-day-header">M</div>
+            <div class="calendar-day-header">T</div>
+            <div class="calendar-day-header">W</div>
+            <div class="calendar-day-header">T</div>
+            <div class="calendar-day-header">F</div>
+            <div class="calendar-day-header">S</div>
+            <div class="calendar-day-header">S</div>
+          </div>
+          
+          <!-- Date buttons will be inserted here -->
+          <div id="calendarDates"></div>
+        </div>
+      </div>
+
+      <!-- Period Details (appears when date selected) -->
+      <div id="periodDetailsSection" class="d-none">
+        <!-- <div class="alert alert-info mb-2"> -->
+          <strong>Selected:</strong> <span id="selectedDateText"></span>
+        <!-- </div> -->
+        
+        <!-- <h6 class="mb-2">Attendance Records for This Date</h6> -->
+        <div id="periodDetailsList" class="mb-3"></div>
+      </div>
+
+      <!-- Take Attendance Button -->
+      <div id="actionSection" class="d-none text-end">
+        <button class="btn btn-success btn-lg" id="takeAttendanceBtn">
+          Take Attendance
+        </button>
+      </div>
     </div>
   </main>
 
