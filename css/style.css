@@ -17,3 +17,91 @@ body {
 #studentList.fading {
   opacity: 0;
 }
+
+/* Calendar Styles */
+.calendar-grid {
+  max-width: 350px;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.calendar-day-header {
+  text-align: center;
+  font-weight: 600;
+  color: #6c757d;
+  padding: 0.25rem;
+  font-size: 0.875rem;
+}
+
+#calendarDates {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.35rem;
+}
+
+.calendar-date-cell {
+  aspect-ratio: 1;
+  border: 2px solid #dee2e6;
+  background: white;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  padding: 0.25rem;
+}
+
+.calendar-date-cell:not(.empty):not(.disabled):hover {
+  /* background: #7940ff; */
+  border-color: #0d6efd;
+}
+
+.calendar-date-cell.selected {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+.calendar-date-cell.today {
+  border-color: #0d6efd;
+  border-width: 3px;
+  font-weight: 700;
+}
+
+.calendar-date-cell.today.selected {
+  border-color: #0a58ca;
+}
+
+.calendar-date-cell.disabled {
+  background: #f8f9fa;
+  color: #adb5bd;
+  cursor: not-allowed;
+  border-color: #e9ecef;
+}
+
+.calendar-date-cell.empty {
+  border: none;
+  cursor: default;
+}
+
+.calendar-date-cell.has-attendance .attendance-badge {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: #198754;
+}
+
+.calendar-date-cell.selected .attendance-badge {
+  color: white;
+}

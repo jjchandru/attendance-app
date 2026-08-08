@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('classTitle').textContent = cls.title;
   document.getElementById('attendanceContent').classList.remove('d-none');
+  
+  // Set up link to select date page
+  document.getElementById('selectDateLink').href = `select-date.html?classId=${encodeURIComponent(classId)}`;
 
   renderDateList(classId, todayIso());
 });

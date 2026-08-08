@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#212529">
   <title>Attendance</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Ancizar+Sans:wght@400;700&display=swap" rel="stylesheet">
@@ -27,11 +29,32 @@
     <div id="attendanceContent" class="d-none">
       <h2 id="classTitle" class="mb-3"></h2>
 
+      <div class="mb-4">
+        <a href="#" id="selectDateLink" class="btn btn-outline-primary">
+          Specific Date Attendance
+        </a>
+      </div>
+
+      <h5 class="mb-3">Attendance Records</h5>
       <div class="row row-cols-2 g-3" id="dateList"></div>
     </div>
   </main>
 
   <script src="js/storage.js"></script>
   <script src="js/attendance.js"></script>
+  <script>
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(registration => {
+            console.log('Service Worker registered successfully:', registration.scope);
+          })
+          .catch(error => {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
 </body>
 </html>
