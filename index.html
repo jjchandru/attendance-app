@@ -17,7 +17,12 @@
   <nav class="navbar navbar-dark bg-dark mb-4">
     <div class="container">
       <span class="navbar-brand mb-0 h1">Attendance</span>
-      <span id="offlineReady" class="badge bg-success d-none">✓ Offline Ready</span>
+      <div>
+        <span id="offlineReady" class="badge bg-success d-none me-2">✓ Offline Ready</span>
+        <button id="clearCacheBtn" class="btn btn-sm btn-outline-light" title="Clear cache and reload">
+          🔄
+        </button>
+      </div>
     </div>
   </nav>
 
@@ -78,22 +83,31 @@
           .then(registration => {
             console.log('Service Worker registered successfully:', registration.scope);
             
-            // Check if service worker is already active and controlling the page
-            if (navigator.serviceWorker.controller) {
-              // Service worker is active, check if resources are cached
-              checkOfflineReady();
-            }
+            // Check for updates every time the page loads
+            registration.update();
             
-            // Listen for when service worker becomes active
+            // Listen for updates
             registration.addEventListener('updatefound', () => {
               const newWorker = registration.installing;
+              console.log('New service worker found, installing...');
+              
               newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'activated') {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New service worker installed but old one still controlling
+                  console.log('New version available! Reloading to activate...');
+                  // Auto-reload to activate new service worker
+                  window.location.reload();
+                } else if (newWorker.state === 'activated') {
                   console.log('Service Worker activated - all resources cached!');
                   showOfflineReady();
                 }
               });
             });
+            
+            // Check if service worker is already active and controlling the page
+            if (navigator.serviceWorker.controller) {
+              checkOfflineReady();
+            }
           })
           .catch(error => {
             console.log('Service Worker registration failed:', error);
@@ -103,6 +117,14 @@
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           console.log('Service Worker now controlling the page');
           setTimeout(checkOfflineReady, 1000);
+        });
+        
+        // Listen for cache update messages from service worker
+        navigator.serviceWorker.addEventListener('message', event => {
+          if (event.data.type === 'CACHE_UPDATED') {
+            console.log('Cache updated to:', event.data.version);
+            showOfflineReady();
+          }
         });
       });
     }
@@ -129,6 +151,38 @@
         }, 5000);
       }
     }
+    
+    // Clear cache button handler
+    document.addEventListener('DOMContentLoaded', () => {
+      const clearCacheBtn = document.getElementById('clearCacheBtn');
+      if (clearCacheBtn) {
+        clearCacheBtn.addEventListener('click', async () => {
+          if (confirm('Clear all cached files and reload? This will fetch the latest version.')) {
+            try {
+              // Unregister service worker
+              if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let registration of registrations) {
+                  await registration.unregister();
+                }
+              }
+              
+              // Clear all caches
+              if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+              }
+              
+              // Reload the page
+              window.location.reload(true);
+            } catch (error) {
+              console.error('Error clearing cache:', error);
+              alert('Error clearing cache. Try clearing browser data manually.');
+            }
+          }
+        });
+      }
+    });
   </script>
 </body>
 </html>

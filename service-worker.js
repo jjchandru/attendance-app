@@ -1,4 +1,4 @@
-const CACHE_NAME = 'attendance-app-v2';
+const CACHE_NAME = 'attendance-app-v3';
 const urlsToCache = [
   './',
   './index.html',
@@ -37,8 +37,9 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and take control immediately
 self.addEventListener('activate', event => {
+  console.log('Service Worker activating...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
@@ -50,7 +51,21 @@ self.addEventListener('activate', event => {
         })
       );
     })
-    .then(() => self.clients.claim()) // Take control immediately
+    .then(() => {
+      console.log('Service Worker activated and taking control');
+      return self.clients.claim(); // Take control of all pages immediately
+    })
+    .then(() => {
+      // Notify all clients that cache has been updated
+      return self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'CACHE_UPDATED',
+            version: CACHE_NAME
+          });
+        });
+      });
+    })
   );
 });
 
