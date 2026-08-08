@@ -1,4 +1,4 @@
-const CACHE_NAME = 'attendance-app-v1';
+const CACHE_NAME = 'attendance-app-v2';
 const urlsToCache = [
   './',
   './index.html',
@@ -14,16 +14,24 @@ const urlsToCache = [
   './js/select-date.js',
   './js/take-attendance.js',
   'https://fonts.googleapis.com/css2?family=Ancizar+Sans:wght@400;700&display=swap',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'
 ];
 
-// Install event - cache all files
+// Install event - cache all files immediately
 self.addEventListener('install', event => {
+  console.log('Service Worker installing and pre-caching all resources...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        console.log('Opened cache, adding all resources...');
+        // Cache all resources immediately, even if not visited yet
+        return cache.addAll(urlsToCache).then(() => {
+          console.log('All resources pre-cached successfully!');
+        });
+      })
+      .catch(error => {
+        console.error('Failed to cache resources:', error);
       })
       .then(() => self.skipWaiting()) // Activate immediately
   );
@@ -46,38 +54,38 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - cache-first strategy for better offline support
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
+      .then(cachedResponse => {
+        // Return cached version if available
+        if (cachedResponse) {
+          console.log('Serving from cache:', event.request.url);
+          return cachedResponse;
         }
 
-        // Clone the request
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest).then(response => {
-          // Check if valid response
+        // Not in cache, fetch from network
+        console.log('Fetching from network:', event.request.url);
+        return fetch(event.request).then(response => {
+          // Don't cache non-successful responses
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
 
-          // Clone the response
+          // Clone and cache the response
           const responseToCache = response.clone();
-
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
 
           return response;
-        }).catch(() => {
-          // Network failed, return offline page if available
-          return caches.match('./index.html');
         });
+      })
+      .catch(error => {
+        console.error('Fetch failed, serving offline page:', error);
+        // If both cache and network fail, return the index page as fallback
+        return caches.match('./index.html');
       })
   );
 });

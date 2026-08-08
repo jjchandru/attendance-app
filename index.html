@@ -17,6 +17,7 @@
   <nav class="navbar navbar-dark bg-dark mb-4">
     <div class="container">
       <span class="navbar-brand mb-0 h1">Attendance</span>
+      <span id="offlineReady" class="badge bg-success d-none">✓ Offline Ready</span>
     </div>
   </nav>
 
@@ -76,11 +77,57 @@
         navigator.serviceWorker.register('./service-worker.js')
           .then(registration => {
             console.log('Service Worker registered successfully:', registration.scope);
+            
+            // Check if service worker is already active and controlling the page
+            if (navigator.serviceWorker.controller) {
+              // Service worker is active, check if resources are cached
+              checkOfflineReady();
+            }
+            
+            // Listen for when service worker becomes active
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'activated') {
+                  console.log('Service Worker activated - all resources cached!');
+                  showOfflineReady();
+                }
+              });
+            });
           })
           .catch(error => {
             console.log('Service Worker registration failed:', error);
           });
+          
+        // Listen for when the service worker takes control
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('Service Worker now controlling the page');
+          setTimeout(checkOfflineReady, 1000);
+        });
       });
+    }
+    
+    function checkOfflineReady() {
+      // Check if all critical resources are cached
+      if ('caches' in window) {
+        caches.keys().then(cacheNames => {
+          if (cacheNames.length > 0) {
+            showOfflineReady();
+          }
+        });
+      }
+    }
+    
+    function showOfflineReady() {
+      const badge = document.getElementById('offlineReady');
+      if (badge) {
+        badge.classList.remove('d-none');
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          badge.style.transition = 'opacity 0.5s';
+          badge.style.opacity = '0';
+        }, 5000);
+      }
     }
   </script>
 </body>
