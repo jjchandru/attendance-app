@@ -3,11 +3,27 @@ const ATTENDANCE_KEY = 'attendanceApp.attendance';
 
 function loadClasses() {
   const raw = localStorage.getItem(CLASSES_KEY);
-  return raw ? JSON.parse(raw) : [];
+  const classes = raw ? JSON.parse(raw) : [];
+  
+  // Ensure all students have batch field and compute hasLabBatches
+  classes.forEach(cls => {
+    cls.students.forEach(student => {
+      if (!student.batch) {
+        student.batch = 'none';
+      }
+    });
+    cls.hasLabBatches = computeHasLabBatches(cls);
+  });
+  
+  return classes;
 }
 
 function saveClasses(classes) {
   localStorage.setItem(CLASSES_KEY, JSON.stringify(classes));
+}
+
+function computeHasLabBatches(cls) {
+  return cls.students.some(s => s.batch === '1' || s.batch === '2');
 }
 
 function attendanceRecordKey(classId, date, period) {
@@ -16,7 +32,16 @@ function attendanceRecordKey(classId, date, period) {
 
 function loadAttendance() {
   const raw = localStorage.getItem(ATTENDANCE_KEY);
-  return raw ? JSON.parse(raw) : {};
+  const records = raw ? JSON.parse(raw) : {};
+  
+  // Ensure all records have batch field
+  Object.values(records).forEach(record => {
+    if (!record.batch) {
+      record.batch = 'all';
+    }
+  });
+  
+  return records;
 }
 
 function saveAttendance(records) {
@@ -78,7 +103,7 @@ function parseRosterCsv(text) {
     const match = email.match(/(\d+)@/);
     if (!match) continue;
 
-    students.push({ number: match[1], name });
+    students.push({ number: match[1], name, batch: 'none' });
   }
 
   if (students.length === 0) {

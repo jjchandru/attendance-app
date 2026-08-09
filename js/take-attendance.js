@@ -2,6 +2,7 @@ let currentClassId = null;
 let currentDate = null;
 let currentClass = null;
 const selectedPeriods = new Set();
+let selectedBatch = 'all'; // 'all', '1', or '2'
 
 function currentLabel() {
   return Array.from(selectedPeriods).sort((a, b) => a - b).join(',');
@@ -20,7 +21,13 @@ function toggleAbsent(number) {
 
   const records = loadAttendance();
   const key = attendanceRecordKey(currentClassId, currentDate, label);
-  const record = records[key] || { classId: currentClassId, date: currentDate, period: label, absentNumbers: [] };
+  const record = records[key] || { 
+    classId: currentClassId, 
+    date: currentDate, 
+    period: label, 
+    batch: selectedBatch,
+    absentNumbers: [] 
+  };
 
   const absentSet = new Set(record.absentNumbers);
   if (absentSet.has(number)) {
@@ -29,6 +36,7 @@ function toggleAbsent(number) {
     absentSet.add(number);
   }
   record.absentNumbers = Array.from(absentSet);
+  record.batch = selectedBatch; // Update batch when modifying
   records[key] = record;
   saveAttendance(records);
 }
@@ -59,7 +67,52 @@ function handlePeriodClick(event) {
   }
 
   renderPeriodButtons();
+  
+  // Auto-select batch filter based on existing record
+  const label = currentLabel();
+  if (label) {
+    const record = getRecordForLabel(label);
+    if (record && record.batch && record.batch !== 'all') {
+      selectedBatch = record.batch;
+    } else {
+      selectedBatch = 'all';
+    }
+    // Update batch buttons if they're visible
+    if (currentClass.hasLabBatches) {
+      renderBatchButtons();
+    }
+  }
+  
   highlightMatchingRecord();
+  renderStudentList(currentClass);
+}
+
+function renderBatchButtons() {
+  const container = document.getElementById('batchButtons');
+  container.innerHTML = '';
+
+  const batches = [
+    { value: 'all', label: 'All' },
+    { value: '1', label: 'Batch 1' },
+    { value: '2', label: 'Batch 2' }
+  ];
+
+  batches.forEach(batch => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.batch = batch.value;
+    btn.textContent = batch.label;
+    btn.className = `btn btn-sm batch-filter-btn ${selectedBatch === batch.value ? 'btn-primary' : 'btn-outline-primary'}`;
+    container.appendChild(btn);
+  });
+}
+
+function handleBatchClick(event) {
+  const btn = event.target.closest('.batch-filter-btn');
+  if (!btn) return;
+
+  selectedBatch = btn.dataset.batch;
+  renderBatchButtons();
   renderStudentList(currentClass);
 }
 
@@ -96,8 +149,12 @@ function renderExistingRecords() {
     const badge = document.createElement('div');
     badge.className = 'existing-record-badge';
     badge.dataset.period = record.period;
+    
+    // Display batch info if not 'all'
+    const batchText = record.batch && record.batch !== 'all' ? ` - Batch ${record.batch}` : '';
+    
     badge.innerHTML = `
-      <span class="badge bg-success me-2">✓ Period ${record.period}</span>
+      <span class="badge bg-success me-2">✓ Period ${record.period}${batchText}</span>
       <span class="text-muted">${record.absentNumbers.length} absent</span>
     `;
     listEl.appendChild(badge);
@@ -127,14 +184,26 @@ function renderStudentList(cls) {
     return;
   }
 
+  // Filter students by batch
+  let filteredStudents = cls.students;
+  if (selectedBatch === '1') {
+    filteredStudents = cls.students.filter(s => s.batch === '1');
+  } else if (selectedBatch === '2') {
+    filteredStudents = cls.students.filter(s => s.batch === '2');
+  }
+  // 'all' shows all students
+
   const record = getRecordForLabel(label);
   const absentSet = record ? new Set(record.absentNumbers) : new Set();
   const status = record ? 'already recorded' : 'not yet taken';
-  absentCountEl.textContent = `Period ${label} — ${status} (${absentSet.size} absent / ${cls.students.length} students)`;
+  
+  // Display batch context in count
+  const batchContext = selectedBatch === 'all' ? 'All' : `Batch ${selectedBatch}`;
+  absentCountEl.textContent = `Period ${label} — ${batchContext} — ${status} (${absentSet.size} absent / ${filteredStudents.length} students)`;
 
   listEl.classList.add('fading');
   listEl.innerHTML = '';
-  cls.students.forEach(student => {
+  filteredStudents.forEach(student => {
     const isAbsent = absentSet.has(student.number);
     const item = document.createElement('div');
     item.className = 'list-group-item d-flex justify-content-between align-items-center';
@@ -181,6 +250,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('classTitle').textContent = currentClass.title;
   document.getElementById('dateLabel').textContent = formatDisplayDateWithDay(parseIsoDate(currentDate));
   document.getElementById('takeAttendanceContent').classList.remove('d-none');
+
+  // Show batch selection if class has lab batches
+  if (currentClass.hasLabBatches) {
+    document.getElementById('batchSelectionSection').classList.remove('d-none');
+    renderBatchButtons();
+    document.getElementById('batchButtons').addEventListener('click', handleBatchClick);
+  }
 
   renderPeriodButtons();
   renderExistingRecords();

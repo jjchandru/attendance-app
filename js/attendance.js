@@ -242,8 +242,12 @@ function showPeriodDetails(dateStr) {
     dateRecords.forEach(record => {
       const badge = document.createElement('div');
       badge.className = 'period-detail-badge';
+      
+      // Display batch info if not 'all'
+      const batchText = record.batch && record.batch !== 'all' ? ` - Batch ${record.batch}` : '';
+      
       badge.innerHTML = `
-        <span class="badge bg-success me-2">Period ${record.period}</span>
+        <span class="badge bg-success me-2">Period ${record.period}${batchText}</span>
         <span class="text-muted">${record.absentNumbers.length} absent</span>
       `;
       detailsList.appendChild(badge);
