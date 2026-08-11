@@ -264,4 +264,120 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('periodButtons').addEventListener('click', handlePeriodClick);
   document.getElementById('studentList').addEventListener('click', (event) => handleAbsentClick(event, currentClass));
+  document.getElementById('downloadCsvBtn').addEventListener('click', () => downloadDayAttendanceCsv(currentClass, currentDate));
 });
+
+function downloadDayAttendanceCsv(cls, date) {
+  const records = loadAttendance();
+  const dateRecords = [];
+  
+  // Collect all records for this class and date
+  for (const key in records) {
+    const record = records[key];
+    if (record.classId === cls.id && record.date === date) {
+      dateRecords.push(record);
+    }
+  }
+  
+  if (dateRecords.length === 0) {
+    alert('No attendance records found for this date.');
+    return;
+  }
+  
+  // Expand periods and create column definitions
+  const columns = []; // Each: { period: number, batch: string, label: string }
+  
+  dateRecords.forEach(record => {
+    const periods = record.period.split(',').map(p => parseInt(p.trim()));
+    const batchLabel = record.batch === 'all' ? 'All' : `B${record.batch}`;
+    
+    periods.forEach(period => {
+      // Check if this period+batch combination already exists
+      const exists = columns.some(col => col.period === period && col.batch === record.batch);
+      if (!exists) {
+        columns.push({
+          period: period,
+          batch: record.batch,
+          label: batchLabel,
+          record: record
+        });
+      }
+    });
+  });
+  
+  // Sort columns by period number, then by batch (all -> 1 -> 2)
+  columns.sort((a, b) => {
+    if (a.period !== b.period) return a.period - b.period;
+    if (a.batch === 'all') return -1;
+    if (b.batch === 'all') return 1;
+    return a.batch.localeCompare(b.batch);
+  });
+  
+  // Format date as dd/mm
+  const dateObj = parseIsoDate(date);
+  const dd = String(dateObj.getDate()).padStart(2, '0');
+  const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const datePrefix = `${dd}/${mm}`;
+  
+  // Build CSV header
+  const headers = ['RRR No.', 'Name'];
+  columns.forEach(col => {
+    headers.push(`${datePrefix} P${col.period}-${col.label}`);
+  });
+  
+  // Build CSV rows
+  const rows = [headers];
+  
+  cls.students.forEach(student => {
+    const row = [student.number, student.name];
+    
+    columns.forEach(col => {
+      const studentBatch = student.batch || 'none';
+      
+      // Check if this column applies to this student
+      if (col.batch === 'all' || col.batch === studentBatch) {
+        // Check if student is absent in this record
+        const absentSet = new Set(col.record.absentNumbers);
+        if (absentSet.has(student.number)) {
+          row.push('a');
+        } else {
+          row.push('/');
+        }
+      } else {
+        // Empty cell - batch mismatch
+        row.push('');
+      }
+    });
+    
+    rows.push(row);
+  });
+  
+  // Convert to CSV string
+  const csvContent = rows.map(row => 
+    row.map(cell => {
+      // Escape cells containing commas, quotes, or newlines
+      const cellStr = String(cell);
+      if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+        return `"${cellStr.replace(/"/g, '""')}"`;
+      }
+      return cellStr;
+    }).join(',')
+  ).join('\n');
+  
+  // Generate filename: {class-name-with-hyphens}-{dd}-{mm}-{yy}.csv
+  const yy = String(dateObj.getFullYear()).slice(-2);
+  const className = cls.title.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+  const filename = `${className}-${dd}-${mm}-${yy}.csv`;
+  
+  // Trigger download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
