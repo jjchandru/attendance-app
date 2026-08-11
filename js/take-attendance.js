@@ -329,7 +329,7 @@ function downloadDayAttendanceCsv(cls, date) {
   const rows = [headers];
   
   cls.students.forEach(student => {
-    const row = [student.number, student.name];
+    const row = [`="${student.number}"`, student.name];
     
     columns.forEach(col => {
       const studentBatch = student.batch || 'none';
