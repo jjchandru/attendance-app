@@ -2,6 +2,22 @@ body {
   font-family: 'Ancizar Sans', sans-serif;
 }
 
+.app-status-dot {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: #6c757d;
+}
+
+.app-status-dot-good {
+  background: #198754;
+}
+
+.app-status-dot-bad {
+  background: #dc3545;
+}
+
 .class-list-item {
   cursor: pointer;
 }

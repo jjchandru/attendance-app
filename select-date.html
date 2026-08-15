@@ -6,16 +6,15 @@
   <meta name="theme-color" content="#212529">
   <title>Select Date - Attendance</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Ancizar+Sans:wght@400;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="vendor/fonts/ancizar-sans.css" rel="stylesheet">
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
 </head>
 <body>
   <nav class="navbar navbar-dark bg-dark mb-2">
     <div class="container">
       <span class="navbar-brand mb-0 h1">Attendance</span>
+      <span id="appStatusMount"></span>
     </div>
   </nav>
 
@@ -78,19 +77,6 @@
 
   <script src="js/storage.js"></script>
   <script src="js/select-date.js"></script>
-  <script>
-    // Register service worker for offline support
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
-          .then(registration => {
-            console.log('Service Worker registered successfully:', registration.scope);
-          })
-          .catch(error => {
-            console.log('Service Worker registration failed:', error);
-          });
-      });
-    }
-  </script>
+  <script src="js/status.js"></script>
 </body>
 </html>
