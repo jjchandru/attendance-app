@@ -88,12 +88,15 @@ function downloadClassAttendanceCsv(cls) {
     const colMm = String(colDate.getMonth() + 1).padStart(2, '0');
     headers.push(`${colDd}/${colMm} P${col.period}-${col.label}`);
   });
+  headers.push('Present Count', 'Absent Count', 'Attendance %');
 
   // Build CSV rows
   const rows = [headers];
 
   cls.students.forEach(student => {
     const row = [`="${student.number}"`, student.name];
+    let presentCount = 0;
+    let absentCount = 0;
 
     columns.forEach(col => {
       const studentBatch = student.batch || 'none';
@@ -102,16 +105,42 @@ function downloadClassAttendanceCsv(cls) {
         const absentSet = new Set(col.record.absentNumbers);
         if (absentSet.has(student.number)) {
           row.push('a');
+          absentCount++;
         } else {
           row.push('/');
+          presentCount++;
         }
       } else {
         row.push('');
       }
     });
 
+    const totalCount = presentCount + absentCount;
+    const attendancePct = totalCount > 0 ? `${Math.round((presentCount / totalCount) * 100)}%` : '';
+    row.push(presentCount, absentCount, attendancePct);
+
     rows.push(row);
   });
+
+  // Build summary row: per-session attendance % across all applicable students
+  const summaryRow = ['', 'Attendance %'];
+  columns.forEach(col => {
+    const absentSet = new Set(col.record.absentNumbers);
+    let colPresent = 0;
+    let colTotal = 0;
+
+    cls.students.forEach(student => {
+      const studentBatch = student.batch || 'none';
+      if (col.batch === 'all' || col.batch === studentBatch) {
+        colTotal++;
+        if (!absentSet.has(student.number)) colPresent++;
+      }
+    });
+
+    summaryRow.push(colTotal > 0 ? `${Math.round((colPresent / colTotal) * 100)}%` : '');
+  });
+  summaryRow.push('', '', '');
+  rows.push(summaryRow);
 
   // Convert to CSV string
   const csvContent = rows.map(row =>
