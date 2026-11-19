@@ -48,6 +48,23 @@ function saveAttendance(records) {
   localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(records));
 }
 
+// Records without an `excluded` flag (all pre-existing data) count as included.
+function isRecordExcluded(record) {
+  return !!record && record.excluded === true;
+}
+
+function setRecordExcluded(classId, date, period, excluded) {
+  const records = loadAttendance();
+  const key = attendanceRecordKey(classId, date, period);
+  if (!records[key]) return;
+  if (excluded) {
+    records[key].excluded = true;
+  } else {
+    delete records[key].excluded;
+  }
+  saveAttendance(records);
+}
+
 function getAttendanceDatesForClass(classId) {
   const records = loadAttendance();
   const periodsByDate = {};

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'attendance-app-v12';
+const CACHE_NAME = 'attendance-app-v13';
 // All assets are same-origin now (see vendor/) so a poor/flaky network can't
 // break precaching by failing to reach a third-party CDN mid-install.
 const urlsToCache = [

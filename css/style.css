@@ -153,6 +153,24 @@ body {
   border-bottom: none;
 }
 
+/* Excluded (hidden from report) period records: greyed out but still viewable */
+.period-detail-badge.excluded {
+  opacity: 0.6;
+}
+
+.period-detail-badge.excluded .exclude-toggle-btn {
+  opacity: 1;
+}
+
+.period-badge-label {
+  cursor: pointer;
+}
+
+.period-absent-list {
+  margin-top: 0.25rem;
+  word-break: break-word;
+}
+
 /* Existing Records Styling */
 .existing-record-badge {
   padding: 0.5rem;

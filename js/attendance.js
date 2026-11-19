@@ -246,10 +246,37 @@ function showPeriodDetails(dateStr) {
       // Display batch info if not 'all'
       const batchText = record.batch && record.batch !== 'all' ? ` - Batch ${record.batch}` : '';
       
+      const excluded = isRecordExcluded(record);
+      if (excluded) badge.classList.add('excluded');
+
+      const absentList = record.absentNumbers.length > 0
+        ? record.absentNumbers.join(', ')
+        : 'No absentees';
+
       badge.innerHTML = `
-        <span class="badge bg-success me-2">Period ${record.period}${batchText}</span>
-        <span class="text-muted">${record.absentNumbers.length} absent</span>
+        <div class="d-flex align-items-center">
+          <span class="badge ${excluded ? 'bg-secondary' : 'bg-success'} me-2 period-badge-label" role="button" tabindex="0" title="Tap to view absent roll numbers">Period ${record.period}${batchText}</span>
+          <span class="text-muted">${record.absentNumbers.length} absent</span>
+          ${excluded ? '<span class="badge text-bg-light border ms-2">Excluded</span>' : ''}
+          <button type="button" class="btn btn-sm btn-link ms-auto exclude-toggle-btn"
+                  title="${excluded ? 'Include in report again' : 'Exclude from report'}"
+                  aria-label="${excluded ? 'Include in report again' : 'Exclude from report'}">
+            <i class="bi ${excluded ? 'bi-eye' : 'bi-eye-slash'}"></i>
+            <span class="ms-1">${excluded ? 'Include again' : 'Exclude'}</span>
+          </button>
+        </div>
+        <div class="period-absent-list small text-muted d-none">Absent: ${absentList}</div>
       `;
+
+      badge.querySelector('.period-badge-label').addEventListener('click', () => {
+        badge.querySelector('.period-absent-list').classList.toggle('d-none');
+      });
+
+      badge.querySelector('.exclude-toggle-btn').addEventListener('click', () => {
+        setRecordExcluded(currentClassId, record.date, record.period, !excluded);
+        showPeriodDetails(dateStr);
+      });
+
       detailsList.appendChild(badge);
     });
   }

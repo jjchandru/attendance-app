@@ -44,10 +44,14 @@ function handleDownloadClassClick(event) {
 
 function downloadClassAttendanceCsv(cls) {
   const records = loadAttendance();
-  const classRecords = Object.values(records).filter(r => r.classId === cls.id);
+  const allClassRecords = Object.values(records).filter(r => r.classId === cls.id);
+  // Excluded records are left out of the report entirely
+  const classRecords = allClassRecords.filter(r => !isRecordExcluded(r));
 
   if (classRecords.length === 0) {
-    alert('No attendance records found for this class.');
+    alert(allClassRecords.length > 0
+      ? 'All attendance records for this class are excluded from the report.'
+      : 'No attendance records found for this class.');
     return;
   }
 
